@@ -1,0 +1,300 @@
+---
+title: "EDA_FAT_LAB"
+author: "Tejas Vaichole"
+date: "28/04/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
+```{r}
+data1 = mtcars
+library(dplyr)
+train = sample_n(data1,15)
+x = train$wt
+y = train$mpg
+plot(x,y,main="scatter plot mileage vs weight",xlab = "weight", ylab="mpg")
+cor.test(x,y)
+model = lm(y~x)
+abline(model,col='blue')
+summary(model)
+```
+
+
+```{r}
+library(forecast)
+library(tseries)
+df = read.csv("./gdp.csv")
+df
+gdpts = ts(df$GDP_gr,start = min(df$Year),end = max(df$Year), frequency=1)
+class(gdpts)
+plot(gdpts)
+acf(gdpts)
+pacf(gdpts)
+adf.test(gdpts)
+gdpmodel = auto.arima(gdpts,ic="aic",trace=TRUE)
+gdpf = forecast(gdpmodel, level=c(95), h=10)
+gdpf
+plot(gdpf)
+accuracy(gdpmodel)
+```
+
+
+```{r}
+library(dplyr)
+setwd("C:\\sanik\\Lab3")
+df = read.csv("weatherHistory2016.csv")
+df
+# taking 4000 data samples
+train = sample_n(df,4000)
+train
+
+# independent variables
+x1 = df$Apparent.Temperature..C.
+x2 = df$Humidity
+x3 = df$Wind.Speed..km.h.
+x4 = df$Wind.Bearing..degrees.
+x5 = df$Visibility..km.
+x6 = df$Pressure..millibars.
+
+# dependent variable
+y = df$Temperature..C.
+
+# correlation test
+cor.test(x1,y)
+cor.test(x2,y)
+cor.test(x3,y)
+cor.test(x4,y)
+cor.test(x5,y)
+cor.test(x6,y)
+model = lm(y~x1 + x2)
+summary(model)
+
+# ARIMA MODEL
+
+library(forecast)
+library(tseries)
+library(lubridate)
+weatherts = ts(df$Temperature..C., start=as.Date("2016-01-01"), end=as.Date("2016-12-31"), frequency=24)
+plot(weatherts)
+acf(weatherts)
+pacf(weatherts)
+adf.test(weatherts)
+weathermodel = auto.arima(weatherts, ic="aic",trace=TRUE)
+weatherf = forecast(weathermodel, level=c(95), h=31)
+weatherf
+plot(weatherf)
+accuracy(weatherf)
+
+```
+
+
+```{r}
+setwd("C:\\Users\\LENOVO\\Desktop\\sem 6\\Essentials of data analytics - Lab\\Lab4")
+df = read.csv("color-anova-example.csv")
+df
+group_by(df,color) %>% summarise(count = n(),mean = mean(response, na.rm = TRUE))
+ANOVA <- aov(response~color, data = df)
+summary(ANOVA)
+
+# Tukey HSD (Tukey Honest Significant Differences)
+TukeyHSD(ANOVA)
+
+```
+
+
+```{r}
+adsData = read.csv("Social_Network_Ads.csv")
+head(adsData)
+library(caTools)
+splitd <- sample.split(adsData, SplitRatio = 0.8)
+train <- subset(adsData, splitd==TRUE)
+test <- subset(adsData, splitd==FALSE)
+adsData$Gender <- as.factor(adsData$Gender)
+adsData$Purchased <- as.factor(adsData$Purchased)
+mymodel<- glm(Purchased ~ Gender+Age+EstimatedSalary, data = adsData, family = "binomial")
+summary(mymodel)
+restrain <- predict(mymodel, train, type='response')  
+plot(restrain)
+restest <- predict(mymodel, test, type='response')
+plot(restest)
+plot(test$Purchased)
+par(new=TRUE) 
+plot(restest, col='red')
+cfmatrix <- table(Act=test$Purchased, pred=restest>0.5)
+cfmatrix
+Acc <- (cfmatrix[[1,1]] + cfmatrix[[2,2]])/sum(cfmatrix)
+Acc
+
+```
+
+
+```{r}
+setwd("C:\\Users\\LENOVO\\Desktop\\sem 6\\Essentials of data analytics - Lab\\Lab6")
+wdbc <- read.table(file.choose(), sep=',')
+head(wdbc)
+wdbc<-wdbc[,-1]
+mynorm <- function(x) {((x-min(x))/(max(x)-min(x)))}
+mydata<- as.data.frame(lapply(wdbc[,-1],mynorm))
+summary(wdbc[,2:5])
+summary(mydata[,1:4])
+train<-mydata[1:400,]
+test<- mydata[401:569,]
+library(class)
+pred<-knn(train, test, wdbc[1:400,1], k =21)
+cf<-table(pred, wdbc[401:569,1])
+cf
+Acc <- (cf[[1,1]] + cf[[2,2]])/sum(cf)
+Acc
+```
+
+
+```{r}
+rm(list=ls())
+setwd("C:\\Users\\LENOVO\\Desktop\\sem 6\\Essentials of data analytics - Lab\\Lab7")
+data <- read.csv("USArrests.csv",row.names=1)
+data = data [,-1]
+df <- scale(data)
+
+#K means
+fit<- kmeans(df, centers = 2)
+fit$cluster
+fit$size
+fit$withinss
+fit$tot.withinss  # Within Cluster Sum of Squares (WCSS)
+Kmax <- 15
+WCSS <- rep(NA,Kmax)
+nClust <- list()
+for (i in 1:Kmax){
+ fit<- kmeans(df,i)
+ WCSS[i] <- fit$tot.withinss
+ nClust[[i]] <- fit$size
+}
+plot(1:Kmax,WCSS,type="b",pch=19)
+fit<-kmeans(df, centers=4)
+fit$cluster
+fit$size
+#install.packages("factoextra")
+library(factoextra)
+fviz_nbclust(df, kmeans, method = "wss")
+fviz_cluster(fit, data)
+
+# K metoid 
+#install.packages("cluster")
+library(cluster)
+fitm <- pam(df, 4, metric = "manhattan") # K-Medoids
+fviz_nbclust(df, pam, method = "wss")
+fviz_cluster(fitm, data)
+fitm
+fitm$metoids
+fitm$clustering
+```
+
+
+```{r}
+rm(list=ls())
+setwd("C:\\Users\\LENOVO\\Desktop\\sem 6\\Essentials of data analytics - Lab\\Lab8")
+data <- read.csv("iris.csv",row.names=1)
+View(data)
+df <- scale(data)
+View(df)
+ed <- dist(df, method = 'euclidean')
+hierClust <- hclust(ed, method = 'complete')
+plot(hierClust)
+cluster1 <- cutree(hierClust, k = 3)
+cluster1
+rect.hclust(hierClust, k = 3, border = 2:4)
+```
+
+
+```{r}
+rm(list = ls())
+
+gd = function(x1, x2, y, m1, m2, c, alpha, con_thr, iter){
+  iterations = 0
+  Lf = 0
+  while(iterations<=iter){
+    y_pred = m1*x1 + m2*x2 + c
+    Lf_new = 0.5*sum(y_pred-y)^2
+    m1 = m1 - alpha*sum((y_pred-y)*x1)
+    m2 = m2 - alpha*sum((y_pred-y)*x2)
+    c = c - alpha*sum(y_pred-y)
+    if(abs(Lf-Lf_new) <= con_thr){
+      break
+    }
+    Lf = Lf_new
+    iterations = iterations+1
+  }
+  return(paste("optional intercept: ",c,", optimal slope1: ", m1, ", optimal slope2: ", m2, ", iterations: ", iterations, ", Loss: ", Lf))
+}
+df = mtcars
+plot(df$wt, df$mpg, col="red",pch = 20)
+plot(df$drat, df$mpg, col="blue",pch = 20)
+gd(df$wt, df$drat, df$mpg , -1, 1, 32, 0.00001, 0.00001, 10000)
+reg = lm(df$mpg ~ df$wt+df$drat)
+reg
+
+```
+
+
+```{r}
+rm(list=ls())
+Mgd <- function(x1, x2, y, m1, m2, c, alpha, gamma, iter)
+{
+  iterations = 0
+  Lf <- 0
+  u_m1 <- 0
+  u_m2 <- 0
+  u_c <- 0
+  while(iterations<=iter)
+  {
+    y_pred = m1*x1 + m2*x2 + c
+    Lf_new <- 0.5*sum((y_pred-y)^2)
+    nu_m1 <- gamma * u_m1 + alpha * sum ((y_pred-y)*x1)
+    nu_m2 <- gamma * u_m2 + alpha * sum ((y_pred-y)*x2)
+    nu_c <- gamma * u_c + alpha * sum (y_pred-y)
+    m1 <- m1 - nu_m1
+    m2 <- m2 - nu_m2
+    c <- c - nu_c
+    u_m1 <- nu_m1
+    u_m2 <- nu_m2
+    u_c <- nu_c
+    Lf <- Lf_new
+    iterations <- iterations + 1
+  }
+  return(paste("optimal intercept:",c,"optimatl slope:",m1,m2,"Loss funciton:",Lf,"iterations:",iterations))
+}
+ 
+data1<-mtcars
+plot(data1$mpg,data1$wt,col="red",pch=20)
+Mgd(data1$wt,data1$hp,data1$mpg,-0.2,-0.2,32,0.000002,0.99,20000)
+lr<-lm(data1$mpg~data1$hp+data1$wt)
+lr
+```
